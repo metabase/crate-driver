@@ -1,0 +1,19 @@
+# Complete list of options here: https://github.com/metabase/metabase/wiki/Metabase-Plugin-Manifest-Reference
+info:
+  name: Metabase Crate Driver
+  version: 1.0.0-crate-jdbc-2.3.0
+  description: Allows Metabase to connect to CrateDB databases. Community Supported driver.
+driver:
+  name: crate
+  display-name: CrateDB
+  lazy-load: true
+  parent: sql-jdbc
+  connection-properties:
+    - name: hosts
+      display-name: Hosts
+      default: "localhost:5432/"
+init:
+  - step: load-namespace
+    namespace: metabase.driver.crate
+  - step: register-jdbc-driver
+    class: io.crate.client.jdbc.CrateDriver

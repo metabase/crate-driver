@@ -134,29 +134,62 @@
 
 (def ^:private extract-integer (comp hx/->integer extract))
 
-(defmethod sql.qp/date :crate [_ unit expr]
-  (let [v (if (instance? Timestamp expr)
-            (hx/literal (du/date->iso-8601 expr))
-            expr)]
-    (case unit
-      :default         (date-format (str "%Y-%m-%d %H:%i:%s") v)
-      :second          (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :second v))
-      :minute          (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :minute v))
-      :minute-of-hour  (extract-integer :minute v)
-      :hour            (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :hour v))
-      :hour-of-day     (extract-integer :hour v)
-      :day             (date-format (str "%Y-%m-%d") (date-trunc :day v))
-      :day-of-week     (extract-integer :day_of_week v)
-      :day-of-month    (extract-integer :day_of_month v)
-      :day-of-year     (extract-integer :day_of_year v)
-      ;; Crate weeks start on Monday, so shift this date into the proper bucket and then decrement the resulting day
-      :week            (date-format (str "%Y-%m-%d") (hx/- (date-trunc :week (hx/+ v day)) day))
-      :week-of-year    (extract-integer :week v)
-      :month           (date-format (str "%Y-%m-%d") (date-trunc :month v))
-      :month-of-year   (extract-integer :month v)
-      :quarter         (date-format (str "%Y-%m-%d") (date-trunc :quarter v))
-      :quarter-of-year (extract-integer :quarter v)
-      :year            (extract-integer :year v))))
+(defn- expr->literal [expr]
+  (if (instance? Timestamp expr)
+    (hx/literal (du/date->iso-8601 expr))
+    expr))
+
+(defmethod sql.qp/date [:crate :default] [_ _ expr]
+  (date-format (str "%Y-%m-%d %H:%i:%s") (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :second] [_ _ expr]
+  (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :second (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :minute] [_ _ expr]
+  (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :minute (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :minute-of-hour] [_ _ expr]
+  (extract-integer :minute (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :hour] [_ _ expr]
+  (date-format (str "%Y-%m-%d %H:%i:%s") (date-trunc :hour (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :hour-of-day] [_ _ expr]
+  (extract-integer :hour (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :day] [_ _ expr]
+  (date-format (str "%Y-%m-%d") (date-trunc :day (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :day-of-week] [_ _ expr]
+  (extract-integer :day_of_week (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :day-of-month] [_ _ expr]
+  (extract-integer :day_of_month (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :day-of-year] [_ _ expr]
+  (extract-integer :day_of_year (expr->literal expr)))
+
+;; Crate weeks start on Monday, so shift this date into the proper bucket and then decrement the resulting day
+(defmethod sql.qp/date [:crate :week] [_ _ expr]
+  (date-format (str "%Y-%m-%d") (hx/- (date-trunc :week (hx/+ (expr->literal expr) day)) day)))
+
+(defmethod sql.qp/date [:crate :week-of-year] [_ _ expr]
+  (extract-integer :week (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :month] [_ _ expr]
+  (date-format (str "%Y-%m-%d") (date-trunc :month (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :month-of-year] [_ _ expr]
+  (extract-integer :month (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :quarter] [_ _ expr]
+  (date-format (str "%Y-%m-%d") (date-trunc :quarter (expr->literal expr))))
+
+(defmethod sql.qp/date [:crate :quarter-of-year] [_ _ expr]
+  (extract-integer :quarter (expr->literal expr)))
+
+(defmethod sql.qp/date [:crate :year] [_ _ expr]
+  (extract-integer :year (expr->literal expr)))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+

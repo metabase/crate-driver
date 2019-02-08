@@ -1,4 +1,4 @@
-(defproject metabase/crate-driver "1.0.0-crate-jdbc-2.3.0"
+(defproject metabase/crate-driver "1.0.1-crate-jdbc-2.3.0"
   :min-lein-version "2.5.0"
 
   :dependencies
